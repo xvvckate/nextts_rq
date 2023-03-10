@@ -1,14 +1,8 @@
 import Navbar from "../components/navbar"
 import { GetServerSideProps } from "next"
+import { useState, useMemo } from "react"
 import { useQuery, dehydrate, QueryClient } from "react-query"
 
-
-interface User{
-    id : number, 
-    username : string, 
-    phone: string, 
-    website : string
-}
 
 async function fetchUsers() : Promise<[]>{
     const res = await fetch("https://jsonplaceholder.typicode.com/users")
@@ -28,15 +22,36 @@ export const getServerSideProps: GetServerSideProps  = async ()=>{
 }
 
 function Users(){
+    const [ username, setUsername ] = useState("")
+
     const { data : usersData } = useQuery("users", fetchUsers,{
         refetchOnMount : false,
         refetchOnWindowFocus : false
     })
+
+    const filterData = useMemo(
+        ()=>
+            usersData?.filter((user)=>
+                user?.username.toLowerCase().includes(username.toLowerCase())
+            ),
+        [username, usersData]
+    )
+
+
     return(
         <>  
             <Navbar />
-            
             <div className="container">
+                <div className="mt-3">
+                    <input type="text" 
+                        placeholder="Username"
+                        className="form-control"
+                        value={username}
+                        onChange={(e)=> setUsername(e.target.value)}
+
+                    />
+                </div>
+
                 <table className="table table-sm mt-4">
                     <thead>
                         <tr>
@@ -49,7 +64,7 @@ function Users(){
                         </tr>
                     </thead>
                     <tbody>
-                        {usersData?.map((user : User, index : number)=>{
+                        {filterData?.map((user : User, index : number)=>{
                             return(
                                 <tr>
                                     <th scope="row">{ index + 1 }</th>
